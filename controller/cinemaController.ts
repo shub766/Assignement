@@ -13,3 +13,28 @@ export const  cinemaName:any = async (req: Request, res: any) => {
     res.status(500).json({ error: 'Failed to create cinema.' });
   }
 };
+
+export  const seatNumber:any =  async (req: any, res: any) => {
+    let reqObj = req.params;
+    const { cinemaId, seatNumber} = reqObj;
+  
+    try {
+      const cinema = await Cinema.findById(cinemaId);
+      if (!cinema) {
+        res.status(404).json({ error: 'Cinema not found.' });
+        return;
+      }
+  
+      if (cinema.seats[seatNumber - 1] === 1) {
+        res.status(400).json({ error: 'Seat already purchased.' });
+        return;
+      }
+  
+      cinema.seats[seatNumber - 1] = 1;
+      await cinema.save();
+  
+      res.json({ seat: seatNumber });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to purchase seat.' });
+    }
+};
