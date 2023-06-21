@@ -38,3 +38,38 @@ export  const seatNumber:any =  async (req: any, res: any) => {
       res.status(500).json({ error: 'Failed to purchase seat.' });
     }
 };
+
+export  const consecutive:any = async (req: any, res: any) => {
+    const { cinemaId } = req.params;
+  
+    try {
+      const cinema = await Cinema.findById(cinemaId);
+      if (!cinema) {
+        res.status(404).json({ error: 'Cinema not found.' });
+        return;
+      }
+  
+      const seats = cinema.seats;
+  
+      let startIndex = -1;
+      for (let i = 0; i < seats.length - 1; i++) {
+        if (seats[i] === 0 && seats[i + 1] === 0) {
+          startIndex = i;
+          break;
+        }
+      }
+  
+      if (startIndex === -1) {
+        res.status(400).json({ error: 'No consecutive seats available.' });
+        return;
+      }
+  
+      seats[startIndex] = 1;
+      seats[startIndex + 1] = 1;
+      await cinema.save();
+  
+      res.json({ seats: [startIndex + 1, startIndex + 2] });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to purchase consecutive seats.' });
+    }
+  };
