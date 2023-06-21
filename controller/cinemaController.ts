@@ -1,4 +1,16 @@
 import {Cinema}from '../model/cinemaSchema';
+import Redlock from 'redlock';
+import { createClient } from 'redis';
+
+
+const redisClient = createClient();
+const redlock = new Redlock([redisClient], {
+  driftFactor: 0.01,
+  retryCount: 10,
+  retryDelay: 200,
+  retryJitter: 200,
+});
+
 export const  cinemaName:any = async (req: Request, res: any) => {
   let reqObj:any=req.body;
   let { cinemaName,seats} = reqObj;
@@ -24,7 +36,7 @@ export  const seatNumber:any =  async (req: any, res: any) => {
         res.status(404).json({ error: 'Cinema not found.' });
         return;
       }
-  
+      const lock = await redlock.lock(cinemaId, 1000);
       if (cinema.seats[seatNumber - 1] === 1) {
         res.status(400).json({ error: 'Seat already purchased.' });
         return;
